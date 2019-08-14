@@ -10,7 +10,7 @@ import java.util.List;
 
 public class ToDoItemRepository {
 
-    public void createToDoItem(String description, LocalDateTime deadline) throws SQLException, IOException, ClassNotFoundException {
+    protected void createToDoItem(String description, LocalDateTime deadline) throws SQLException, IOException, ClassNotFoundException {
         String insertSql = "INSERT INTO to_do_item (description, deadline) VALUES(?, ?)";
 
 //  mai jos e un try cu resources
@@ -21,7 +21,7 @@ public class ToDoItemRepository {
             preparedStatement.setString(1, description);
             preparedStatement.setDate(2, java.sql.Date.valueOf(deadline.toLocalDate()));
 
-
+            preparedStatement.executeUpdate();
         }
     }
 
