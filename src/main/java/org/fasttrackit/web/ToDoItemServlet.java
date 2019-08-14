@@ -1,7 +1,7 @@
 package org.fasttrackit.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.fasttrackit.config.ObjectMapperConfiguration;
+import org.fasttrackit.domain.ToDoItem;
 import org.fasttrackit.service.ToDoItemService;
 import org.fasttrackit.transfer.SaveToDoItemRequest;
 
@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 @WebServlet("/to-do-items")
 
@@ -22,9 +23,9 @@ public class ToDoItemServlet extends HttpServlet {
 //end point
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        SaveToDoItemRequest request = objectMapper.readValue(req.getReader(), SaveToDoItemRequest.class);
+        SaveToDoItemRequest request =
+
+        ObjectMapperConfiguration.getObjectMapper().readValue(req.getReader(), SaveToDoItemRequest.class);
         try {
             toDoItemService.createToDoItem(request);
         } catch (SQLException | ClassNotFoundException e) {
@@ -32,5 +33,19 @@ public class ToDoItemServlet extends HttpServlet {
         }
     }
 
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        super.doGet(req, resp);
+        try {
+            List<ToDoItem> toDoItems = toDoItemService.getToDoItems();
 
+            String responseJSON = ObjectMapperConfiguration.getObjectMapper().writeValueAsString(toDoItems);
+            resp.getWriter().print(responseJSON);
+            resp.getWriter().flush();
+            resp.getWriter().close();
+
+        } catch (SQLException | ClassNotFoundException e) {
+            resp.sendError(500, "Internal server error: " + e.getMessage());
+        }
+    }
 }
