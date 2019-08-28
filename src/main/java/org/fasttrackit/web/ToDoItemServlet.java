@@ -4,6 +4,7 @@ import org.fasttrackit.config.ObjectMapperConfiguration;
 import org.fasttrackit.domain.ToDoItem;
 import org.fasttrackit.service.ToDoItemService;
 import org.fasttrackit.transfer.SaveToDoItemRequest;
+import org.fasttrackit.transfer.UpdateToDoItemRequest;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -23,6 +24,8 @@ public class ToDoItemServlet extends HttpServlet {
 //end point
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        setAccessControlHeaders(resp);
+
         SaveToDoItemRequest request =
 
         ObjectMapperConfiguration.getObjectMapper().readValue(req.getReader(), SaveToDoItemRequest.class);
@@ -35,6 +38,8 @@ public class ToDoItemServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        setAccessControlHeaders(resp);
+
         try {
             List<ToDoItem> toDoItems = toDoItemService.getToDoItems();
 
@@ -50,6 +55,8 @@ public class ToDoItemServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        setAccessControlHeaders(resp);
+
         String id = req.getParameter("id");
 
         try {
@@ -58,4 +65,33 @@ public class ToDoItemServlet extends HttpServlet {
             resp.sendError(500, "Internal server error: " + e.getMessage());
         }
     }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        setAccessControlHeaders(resp);
+
+        String id = req.getParameter("id");
+
+        UpdateToDoItemRequest request =
+                ObjectMapperConfiguration.getObjectMapper().readValue(req.getReader(), UpdateToDoItemRequest.class);
+
+        try {
+            toDoItemService.updateToDoItem(Long.parseLong(id), request);
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+// mai jos este un pre-flight request si ca sa nu il scriu de 10 ori
+// , l-am transformat in metoda cu refrector. Asta ajuta la CORS
+    @Override
+    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        setAccessControlHeaders(resp);
+    }
+
+    private void setAccessControlHeaders(HttpServletResponse resp) {
+        resp.setHeader("Access-Control-Allow-Origin","*");
+        resp.setHeader("Access-Control-Allow-Methods","GET, POST, PUT, DELETE");
+        resp.setHeader("Access-Control-Allow-Headers","content-type");
+    }
 }
+
